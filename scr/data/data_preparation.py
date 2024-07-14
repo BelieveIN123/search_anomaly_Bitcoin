@@ -139,6 +139,26 @@ class DataPreparation:
         self.df_quotes.to_excel('self.df_quotes.xlsx', index=False)
         pass
 
+    def _find_target_bar(self, diff_find):
+        """
+        Нахожу целевые бары
+        diff_find - процент изменения цены за бар.
+
+        Итоговая колонка содержит:
+        0 - если мзенение меньше diff_find
+        фактическое максимальное изменение от цены open до 2х из (high, low)
+        цена close - в этом случае не нужна.
+
+        Для создания прогноза нужно будет сместить занную колонку на 1 в низ.
+
+        Постобработка:
+        Нужно убрать ситуации когда следующий день идёт и в минус и в плюс.
+        т.е. когда просто большая волатильность.
+        Такие дни я хочу выкинуть потому что меня бы вибило по стопу. (в тамом случае предсказываем волатильность,
+        но без превызки к направлению)
+        :return:
+        """
+        self.df_quotes['Open', 'High', "Low", "Close"]
 
     def prepare_data_main(self):
         self.set_work_path()
@@ -147,9 +167,8 @@ class DataPreparation:
         else:
             self._read_save_quotes()
         self._convert_to_float()
-
         self._convert_to_diff_format()
-        pass
+        self._find_target_bar()
 
 
 if __name__ == '__main__':
