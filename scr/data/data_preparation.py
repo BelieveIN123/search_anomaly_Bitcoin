@@ -152,13 +152,39 @@ class DataPreparation:
         Для создания прогноза нужно будет сместить занную колонку на 1 в низ.
 
         Постобработка:
-        Нужно убрать ситуации когда следующий день идёт и в минус и в плюс.
+        1) Нужно убрать ситуации когда следующий день идёт и в минус и в плюс.
         т.е. когда просто большая волатильность.
         Такие дни я хочу выкинуть потому что меня бы вибило по стопу. (в тамом случае предсказываем волатильность,
         но без превызки к направлению)
+
+        2) Нужно убрать ситуации когда движение происхоидло только из-за ВНЕЗАМНЫХ новостей.
         :return:
         """
-        self.df_quotes['Open', 'High', "Low", "Close"]
+        def get_filter_target(row, diff_find):
+            """
+
+
+            :param diff_find:
+            :return:
+            """
+            if abs(row['diff_low']) > diff_find and row['diff_high'] > diff_find:
+                return 0
+            if row['diff_low'] > diff_find:
+                return row['diff_low']
+            if row['diff_high'] < diff_find:
+                return row['diff_high']
+
+        self.df_quotes['diff_low'] =(self.df_quotes['Low'] / self.df_quotes['Open']) - 1
+        self.df_quotes['diff_high'] = (self.df_quotes['High'] / self.df_quotes['Open']) - 1
+
+        # TODO проверить
+        self.df_quotes['diff_low'] = np.where(self.df_quotes['diff_low'] >0, 0, self.df_quotes['diff_low'])
+        self.df_quotes['diff_high'] = np.where(self.df_quotes['diff_high'] <0, 0, self.df_quotes['diff_high'])
+
+        self.df_quotes['target_predict'] = self.df_quotes.apply(lambda row: get_filter_target(row, diff_find), axis=1)
+
+
+        # self.df_quotes['Open', 'High', "Low", "Close"]
 
     def prepare_data_main(self):
         self.set_work_path()
