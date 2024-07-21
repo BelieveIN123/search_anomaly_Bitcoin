@@ -162,27 +162,27 @@ class DataPreparation:
         """
         def get_filter_target(row, diff_find):
             """
-
-
             :param diff_find:
             :return:
             """
             if abs(row['diff_low']) > diff_find and row['diff_high'] > diff_find:
                 return 0
-            if row['diff_low'] > diff_find:
+            if abs(row['diff_low']) > diff_find and row['diff_low'] < 0:
                 return row['diff_low']
-            if row['diff_high'] < diff_find:
+            if row['diff_high'] > diff_find and row['diff_low'] > 0:
                 return row['diff_high']
+            return 0
 
-        self.df_quotes['diff_low'] =(self.df_quotes['Low'] / self.df_quotes['Open']) - 1
+        self.df_quotes['diff_low'] = (self.df_quotes['Low'] / self.df_quotes['Open']) - 1
         self.df_quotes['diff_high'] = (self.df_quotes['High'] / self.df_quotes['Open']) - 1
 
-        # TODO проверить
+        # Доп. проверка.
         self.df_quotes['diff_low'] = np.where(self.df_quotes['diff_low'] >0, 0, self.df_quotes['diff_low'])
         self.df_quotes['diff_high'] = np.where(self.df_quotes['diff_high'] <0, 0, self.df_quotes['diff_high'])
 
+        # Создаю таргет.
         self.df_quotes['target_predict'] = self.df_quotes.apply(lambda row: get_filter_target(row, diff_find), axis=1)
-
+        pass
 
         # self.df_quotes['Open', 'High', "Low", "Close"]
 
@@ -194,7 +194,7 @@ class DataPreparation:
             self._read_save_quotes()
         self._convert_to_float()
         self._convert_to_diff_format()
-        self._find_target_bar()
+        self._find_target_bar(diff_find=0.05)
 
 
 if __name__ == '__main__':
