@@ -21,6 +21,7 @@ class CheckPreparedData():
         fig, ax = mpf.plot(df, type='candle', style='charles', returnfig=True, figscale=1.5, figsize=(60, 10))
 
         plt.show()
+        pass
 
 
 if __name__ == '__main__':
