@@ -10,6 +10,7 @@ from tqdm import tqdm
 # %pip install python-binance
 import os
 import pickle
+from pathlib import Path
 
 class DataPreparation:
     def __init__(self,
@@ -135,6 +136,10 @@ class DataPreparation:
         self.df_quotes.sort_values(by=['Open time'], inplace=True)
 
         self.df_quotes_diff = self.df_quotes[['Open', 'High', "Low", "Close", "Volume", "Quote asset volume", "Number of trades"]].pct_change()
+        for col in list(self.df_quotes_diff):
+            new_col = col + '_diff'
+            self.df_quotes[new_col] = self.df_quotes[col]
+
         self.df_quotes_diff.to_excel('self.df_quotes_diff.xlsx', index=False)
         self.df_quotes.to_excel('self.df_quotes.xlsx', index=False)
         pass
@@ -184,7 +189,36 @@ class DataPreparation:
         self.df_quotes['target_predict'] = self.df_quotes.apply(lambda row: get_filter_target(row, diff_find), axis=1)
         pass
 
-        # self.df_quotes['Open', 'High', "Low", "Close"]
+    def _line_support_resistance(self):
+        '''
+        Линии поддержки и сопротивления.
+        Сейчас реализовать это довольно тяжело.
+        Как минимум нужно будет делать изменения от цены открытия. И устанавливать поддержку на
+        цену от цены открытия для кадого дня.
+        (сначала надо будет понять что это вообще за линия)
+
+        Так же надо учесть, что такой линии может не быть.
+
+        :return:
+        '''
+        pass
+
+
+    def _save_final_file(self):
+        """
+
+        :return:
+        """
+        name = f'{self.pair_names}_{self.count_day}d_interval-{self.interval}_diff'
+        part_name = 'data/processed'
+        file_path = f'{part_name}/{name}.pkl'
+
+        if not Path(part_name).exists():
+            os.mkdir(part_name)
+
+        # Сохранение данных.
+        with open(file_path, 'wb') as file:
+            pickle.dump(name, file)
 
     def prepare_data_main(self):
         self.set_work_path()
@@ -195,6 +229,8 @@ class DataPreparation:
         self._convert_to_float()
         self._convert_to_diff_format()
         self._find_target_bar(diff_find=0.05)
+        self._save_final_file()
+        return self.df_quotes
 
 
 if __name__ == '__main__':
