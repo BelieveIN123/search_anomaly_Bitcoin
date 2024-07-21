@@ -17,3 +17,29 @@
 Также критерием выхода будет за то что модель говорит на следующем баре противоположный прогноз.
 
 '''
+
+class MLBoostClfDayTrade:
+    def __init__(self):
+        pass
+    def fit(self):
+        pass
+
+    def _check_input_data(self):
+        pass
+
+    def get_prediction(self):
+        pass
+
+    def decision_trade(self):
+        '''
+        Условия входа в сделку.
+        :return:
+        '''
+        pass
+
+    def decision_close(self):
+        '''
+        Условия закрытия сделки.
+        :return:
+        '''
+        pass
