@@ -12,13 +12,14 @@ class CheckPreparedData():
         get_data = DataPreparation(load_new_data=False).prepare_data_main()
         df = get_data.copy()
         df['Date'] = pd.to_datetime(df['Open time'])
+        df['Volume'] = df['Quote asset volume']
         df.set_index('Open time', inplace=True)
 
         # Ensure that the dataframe has the required columns for mplfinance
         # The columns should typically be 'Open', 'High', 'Low', 'Close', and optionally 'Volume'
 
         # Создание графика японских свечей
-        fig, ax = mpf.plot(df, type='candle', style='charles', returnfig=True, figscale=1.5, figsize=(60, 10))
+        fig, ax = mpf.plot(df, type='candle', style='charles', volume=True, returnfig=True, figscale=1.5, figsize=(60, 10))
 
         plt.show()
 
