@@ -174,7 +174,7 @@ class DataPreparation:
                 return 0
             if abs(row['diff_low']) > diff_find and row['diff_low'] < 0:
                 return row['diff_low']
-            if row['diff_high'] > diff_find and row['diff_low'] > 0:
+            if row['diff_high'] > diff_find and row['diff_high'] > 0:
                 return row['diff_high']
             return 0
 
