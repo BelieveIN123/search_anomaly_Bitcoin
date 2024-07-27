@@ -38,14 +38,27 @@ class CheckPreparedData():
 
         apdict = []
         if len(up_signals) > 0:
-            apdict.append(mpf.make_addplot(df['Up Signal'], type='scatter', marker='^', markersize=100, color='g', panel=0))
+            apdict.append(mpf.make_addplot(df['Up Signal'],
+                                           type='scatter',
+                                           marker='o',
+                                           markersize=20,
+                                           color='g',
+                                           panel=0,
+                                           alpha=0.9))
         if len(down_signals) > 0:
-            apdict.append(mpf.make_addplot(df['Down Signal'], type='scatter', marker='v', markersize=100, color='r', panel=0))
+            apdict.append(mpf.make_addplot(df['Down Signal'],
+                                           type='scatter',
+                                           marker='o',
+                                           markersize=20,
+                                           color='r',
+                                           panel=0,
+                                           alpha=0.9))
 
         # Создание графика японских свечей
         fig, ax = mpf.plot(df, type='candle', style='charles', addplot=apdict, volume=True, returnfig=True, figscale=1.5, figsize=(60, 10))
 
         plt.show()
+        plt.close()
 
 if __name__ == '__main__':
     checker = CheckPreparedData()
