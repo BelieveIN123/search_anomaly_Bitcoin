@@ -25,7 +25,7 @@ from catboost import CatBoostClassifier
 import pandas as pd
 import datetime
 
-# Предполагаем, что у вас есть обученная модель CatBoost
+# Предполагаем, что у вас есть начально обученная модель CatBoost
 model = CatBoostClassifier()
 model.load_model('path_to_your_model.cbm')
 
@@ -34,15 +34,22 @@ class CustomStrategy(bt.Strategy):
         ('stop_loss', 0.05),
         ('take_profit', 0.05),
         ('hold_days', 3),
+        ('retrain_period', 7),  # Период дообучения в днях
     )
 
     def __init__(self):
         self.dataclose = self.datas[0].close
         self.order = None
         self.buyprice = None
-        self.hold_day_count = 0
+        self.bar_executed = None
+        self.last_retrain = 0
 
     def next(self):
+        # Ежедневное или еженедельное дообучение
+        if (len(self) - self.last_retrain) >= self.params.retrain_period:
+            self.retrain_model()
+            self.last_retrain = len(self)
+
         # Получаем данные для прогноза
         data = self.get_data_for_prediction()
         prediction = model.predict(data)
@@ -70,7 +77,6 @@ class CustomStrategy(bt.Strategy):
                 self.order = self.buy()
                 self.buyprice = self.dataclose[0]
                 self.bar_executed = len(self)
-                self.hold_day_count = 0
 
     def get_data_for_prediction(self):
         # Здесь реализуйте сбор данных для прогноза, например, используйте pandas DataFrame
@@ -84,6 +90,25 @@ class CustomStrategy(bt.Strategy):
 
         return data
 
+    def retrain_model(self):
+        # Здесь реализуйте сбор новых данных и дообучение модели
+        # new_data, new_labels = self.get_new_training_data()
+
+        # Пример получения новых данных и меток
+        new_data = pd.DataFrame({
+            'feature1': [self.dataclose[0]],  # Пример использования текущей цены
+            # Добавьте здесь другие необходимые признаки
+        })
+        new_labels = [0]  # Пример метки, замените на актуальные метки
+
+        # Дообучение модели
+        model.fit(new_data, new_labels, verbose=False, use_best_model=True, init_model=model)
+
+    def get_new_training_data(self):
+        # Здесь реализуйте логику получения новых данных для обучения
+        # Это может быть загрузка данных из файла или API
+        pass
+
 if __name__ == '__main__':
     cerebro = bt.Cerebro()
     cerebro.addstrategy(CustomStrategy)
@@ -91,7 +116,7 @@ if __name__ == '__main__':
     # Загрузка данных
     data = bt.feeds.YahooFinanceData(
         dataname='AAPL',
-        fromdate=datetime.datetime(2022, 1, 1),
+        fromdate=datetime.datetime(2020, 1, 1),
         todate=datetime.datetime(2023, 1, 1)
     )
 
