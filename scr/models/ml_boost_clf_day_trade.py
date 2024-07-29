@@ -1,4 +1,6 @@
 # Примерный план по которому я двигаюсь:
+from catboost import CatBoostClassifier, Pool
+
 
 '''
 Можно предсказывать только длинные движения.  То есть модель обучать только на изменениях выше 5%.
@@ -20,15 +22,20 @@
 
 class MLBoostClfDayTrade:
     def __init__(self):
-        pass
-    def fit(self):
+        self.model = CatBoostClassifier(iterations=2,
+                                   depth=2,
+                                   learning_rate=1,
+                                   loss_function='Logloss',
+                                   verbose=True)
+        self.columns=[]
+    def fit(self, X, y):
+        self.model.fit(X[self.columns], y)
+
+    def _check_input_data_X(self):
         pass
 
-    def _check_input_data(self):
-        pass
-
-    def get_prediction(self):
-        pass
+    def get_prediction(self, X):
+        self.model.predict(X)
 
     def decision_trade(self):
         '''
