@@ -19,6 +19,10 @@ class CustomStrategy(bt.Strategy):
 
     def __init__(self):
         self.dataclose = self.datas[0].close
+        self.dataopen = self.datas[0].open
+        self.datahigh = self.datas[0].high
+        self.datalow = self.datas[0].low
+        self.datavolume = self.datas[0].volume
         self.order = None
         self.buyprice = None
         self.bar_executed = None
@@ -37,7 +41,7 @@ class CustomStrategy(bt.Strategy):
             self.last_retrain = len(self)
 
         # Получаем данные для прогноза
-        data = self.get_data_for_prediction()
+        data = self.data_preparation()
         prediction = model.predict(data)
 
         if self.order:
@@ -68,24 +72,42 @@ class CustomStrategy(bt.Strategy):
         self.training_data.append(self.get_training_features())
         self.training_labels.append(self.get_training_label())
 
-    def get_data_for_prediction(self):
-        # Здесь реализуйте сбор данных для прогноза, например, используйте pandas DataFrame
-        # data = pd.DataFrame(...)
-
-        # Пример использования последних значений для прогноза
+    def data_preparation(self):
+        # Собираем и нормируем данные для прогноза
         data = pd.DataFrame({
-            'feature1': [self.dataclose[0]],  # Пример использования текущей цены
-            # Добавьте здесь другие необходимые признаки
+            'open': [self.dataopen[0]],
+            'high': [self.datahigh[0]],
+            'low': [self.datalow[0]],
+            'close': [self.dataclose[0]],
+            'volume': [self.datavolume[0]]
         })
+
+        # Нормализация данных
+        data = (data - data.mean()) / data.std()
+
+        # Добавление новых параметров (пример: разница между high и low)
+        data['range'] = data['high'] - data['low']
+        data['change'] = data['close'] - data['open']
 
         return data
 
     def get_training_features(self):
-        # Здесь реализуйте сбор данных для обучения
+        # Собираем и нормируем данные для обучения
         features = {
-            'feature1': self.dataclose[0],  # Пример использования текущей цены
-            # Добавьте здесь другие необходимые признаки
+            'open': self.dataopen[0],
+            'high': self.datahigh[0],
+            'low': self.datalow[0],
+            'close': self.dataclose[0],
+            'volume': self.datavolume[0]
         }
+
+        # Нормализация данных
+        features = {key: (value - pd.Series(value).mean()) / pd.Series(value).std() for key, value in features.items()}
+
+        # Добавление новых параметров (пример: разница между high и low)
+        features['range'] = features['high'] - features['low']
+        features['change'] = features['close'] - features['open']
+
         return features
 
     def get_training_label(self):
@@ -111,7 +133,7 @@ if __name__ == '__main__':
         dataname='AAPL',
         fromdate=datetime.datetime(2021, 1, 1),
         todate=datetime.datetime(2023, 1, 1)
-    )   # TODO
+    )
 
     cerebro.adddata(data)
 
