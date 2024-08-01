@@ -3,6 +3,7 @@ import catboost
 from catboost import CatBoostClassifier
 import pandas as pd
 import datetime
+from collections import deque
 
 # Предполагаем, что у вас есть начально обученная модель CatBoost
 model = CatBoostClassifier()
@@ -15,6 +16,7 @@ class CustomStrategy(bt.Strategy):
         ('hold_days', 3),
         ('retrain_period', 7),  # Период дообучения в днях
         ('initial_skip_days', 100),  # Количество дней для пропуска перед началом дообучения
+        ('training_data_window', 100)  # Размер окна для обучения
     )
 
     def __init__(self):
@@ -27,8 +29,10 @@ class CustomStrategy(bt.Strategy):
         self.buyprice = None
         self.bar_executed = None
         self.last_retrain = 0
-        self.training_data = []
-        self.training_labels = []
+
+        # Используем очередь с фиксированным размером для хранения новых данных
+        self.training_data = deque(maxlen=self.params.training_data_window)
+        self.training_labels = deque(maxlen=self.params.training_data_window)
 
     def next(self):
         # Пропуск первых n дней для начального накопления данных
@@ -72,15 +76,18 @@ class CustomStrategy(bt.Strategy):
         self.training_data.append(self.get_training_features())
         self.training_labels.append(self.get_training_label())
 
-    def data_preparation(self):
-        # Собираем и нормируем данные для прогноза
-        data = pd.DataFrame({
-            'open': [self.dataopen[0]],
-            'high': [self.datahigh[0]],
-            'low': [self.datalow[0]],
-            'close': [self.dataclose[0]],
-            'volume': [self.datavolume[0]]
-        })
+    def data_preparation(self, data=None):
+        # Собираем и нормируем данные
+        if data is None:
+            data = pd.DataFrame({
+                'open': [self.dataopen[0]],
+                'high': [self.datahigh[0]],
+                'low': [self.datalow[0]],
+                'close': [self.dataclose[0]],
+                'volume': [self.datavolume[0]]
+            })
+        else:
+            data = pd.DataFrame(data)
 
         # Нормализация данных
         data = (data - data.mean()) / data.std()
@@ -119,10 +126,13 @@ class CustomStrategy(bt.Strategy):
     def retrain_model(self):
         # Дообучение модели
         new_data = pd.DataFrame(self.training_data)
-        new_labels = self.training_labels
+        new_labels = list(self.training_labels)
+
+        # Преобразование данных перед fit
+        prepared_data = self.data_preparation(new_data)
 
         # Дообучение модели
-        model.fit(new_data, new_labels, verbose=False, use_best_model=True, init_model=model)
+        model.fit(prepared_data, new_labels, verbose=False, use_best_model=True, init_model=model)
 
 if __name__ == '__main__':
     cerebro = bt.Cerebro()
