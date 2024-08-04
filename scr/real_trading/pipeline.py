@@ -4,6 +4,7 @@ from catboost import CatBoostClassifier
 import pandas as pd
 import datetime
 from collections import deque
+import yfinance as yf
 
 # Предполагаем, что у вас есть начально обученная модель CatBoost
 model = CatBoostClassifier()
@@ -37,6 +38,9 @@ class CustomStrategy(bt.Strategy):
     def next(self):
         # Пропуск первых n дней для начального накопления данных
         if len(self) < self.params.initial_skip_days:
+            # Сохранение данных для последующего обучения
+            self.training_data.append(self.get_training_features())
+            self.training_labels.append(self.get_training_label())
             return
 
         # Ежедневное или еженедельное дообучение
@@ -138,14 +142,12 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
     cerebro.addstrategy(CustomStrategy)
 
-    # Загрузка данных
-    data = bt.feeds.YahooFinanceData(
-        dataname='AAPL',
-        fromdate=datetime.datetime(2021, 1, 1),
-        todate=datetime.datetime(2023, 1, 1)
-    )
+    # Загрузка данных через yfinance
+    data = yf.download('AAPL', start='2022-01-01', end='2023-01-01')
+    data.columns = [str.lower(col) for col in list(data)]
+    data_feed = bt.feeds.PandasData(dataname=data)
 
-    cerebro.adddata(data)
+    cerebro.adddata(data_feed)
 
     # Начальные деньги
     cerebro.broker.set_cash(10000.0)
