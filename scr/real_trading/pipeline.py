@@ -35,7 +35,8 @@ class CustomStrategy(bt.Strategy):
         self.order = None
         self.buyprice = None
         self.bar_executed = None
-        self.last_retrain = 0
+        self.last_retrain = -(self.params.retrain_period)
+        # В место 0. Чтобы на первом периоде происходило обучение.
 
         # Используем очередь с фиксированным размером для хранения новых данных
         self.training_data = deque(maxlen=self.params.training_data_window)
@@ -54,8 +55,9 @@ class CustomStrategy(bt.Strategy):
             self.retrain_model()
             self.last_retrain = len(self)
 
-        # Получаем данные для прогноза
-        data = self.data_preparation()  # TODO поправить.
+        # Получаем данные для прогноза (один временной период)
+        iter_predict_data = pd.DataFrame([self.get_training_features()])
+        data = self.data_preparation(iter_predict_data)  # TODO поправить.
         prediction = model.predict(data)
 
         if self.order:
@@ -89,13 +91,7 @@ class CustomStrategy(bt.Strategy):
     def data_preparation(self, data=None):
         # Собираем и нормируем данные
         if data is None:
-            data = pd.DataFrame({
-                'open': [self.dataopen[0]],
-                'high': [self.datahigh[0]],
-                'low': [self.datalow[0]],
-                'close': [self.dataclose[0]],
-                'volume': [self.datavolume[0]]
-            })
+            raise ValueError('data должна иметь значения.')
         else:
             data = pd.DataFrame(data)
 
