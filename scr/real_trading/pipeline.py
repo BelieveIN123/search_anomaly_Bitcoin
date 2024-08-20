@@ -20,7 +20,7 @@ class CustomStrategy(bt.Strategy):
         ('stop_loss', 0.05),
         ('take_profit', 0.05),
         ('hold_days', 3),
-        ('retrain_period', 7),  # Период дообучения в днях
+        ('retrain_period', 100),  # Период дообучения в днях
         ('initial_skip_days', 100),  # Количество дней для пропуска перед началом дообучения
         ('training_data_window', 100)  # Размер окна для обучения
     )
@@ -60,7 +60,7 @@ class CustomStrategy(bt.Strategy):
         data = self.data_preparation(iter_predict_data)  # TODO поправить.
         prediction = model.predict(data)
 
-        if self.order:
+        if self.order:  # TODO - Не правильное выставление ордеров.
             # Условия выхода
             if len(self) >= (self.bar_executed + self.params.hold_days):
                 self.order = self.sell()
@@ -166,6 +166,7 @@ if __name__ == '__main__':
     data['target'] = data['target'].fillna(0)
     # data = data.reset_index(drop=False)
     # data['date'] = pd.to_datetime(data['date'])
+
     data_feed = CustomPandasData(dataname=data)
 
     cerebro.adddata(data_feed)
