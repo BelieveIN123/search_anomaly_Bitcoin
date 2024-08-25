@@ -65,17 +65,15 @@ class CustomStrategy(bt.Strategy):
         if self.position:
             if self.position.size > 0:  # Закрытие длинной позиции
                 price_buy = self.buyprice   # Цена входа в позицию.
-                max_diff_position_top = self.data0.high[0] / self.buyprice - 1
-                max_diff_position_bot = self.data0.low[0] / self.buyprice - 1
 
                 # Условия выхода
                 if len(self) >= (self.bar_executed + self.params.hold_days):
                     self.order = self.sell(size=self.position.size, price=price_close)
                     return
-                elif max_diff_position_top >= self.params.take_profit:
-                    pass
-                elif max_diff_position_bot <= self.params.stop_loss:  # TODO
-                    pass
+                # elif max_diff_position_top >= self.params.take_profit:
+                #     pass
+                # elif max_diff_position_bot <= self.params.stop_loss:  # TODO
+                #     pass
 
             # elif self.position.size < 0:  # Закрытие короткой позиции # TODO
             #     # Условия выхода # 1
@@ -87,22 +85,23 @@ class CustomStrategy(bt.Strategy):
             #     self.order = self.sell()
             #     return
 
-            current_position = self.dataclose[0] / self.buyprice - 1
-            if current_position >= self.params.take_profit:
-                self.order = self.sell()
-                return
-            elif current_position <= -self.params.stop_loss:
-                self.order = self.sell()
-                return
-
-            if prediction == 1:  # Прогноз в другую сторону
-                self.order = self.sell()
-                return
+            # current_position = self.dataclose[0] / self.buyprice - 1
+            # if current_position >= self.params.take_profit:
+            #     self.order = self.sell()
+            #     return
+            # elif current_position <= -self.params.stop_loss:
+            #     self.order = self.sell()
+            #     return
+            #
+            # if prediction == 1:  # Прогноз в другую сторону
+            #     self.order = self.sell()
+            #     return
         else:
             # Условия входа
-            if prediction == 0 or prediction == 2:
-                self.order = self.buy()
-                self.buyprice = self.dataclose[0]
+            if prediction == 1:
+                price_take = price_close * (1 + self.params.take_profit)
+                price_stop = price_close * (1 + self.params.stop_loss)
+                self.order = self.buy_bracket(limitprice=price_take, price=price_close, stopprice=price_stop)
                 self.bar_executed = len(self)
 
         # Сохранение данных для последующего обучения
@@ -183,8 +182,15 @@ if __name__ == '__main__':
     # data = (data.sort_values(['date'])
     #         .reset_index(drop=True))
     data['month_year'] = data.index.day + data.index.month * 100 + data.index.year * 100 * 100
-    data['target'] = data['open'] / data['open'].shift(-1)
+    data['target'] = data['open'] / data['open'].shift(1)
     data['target'] = data['target'].fillna(0)
+    mask1 = (data['target'] > 1.02)
+    data.loc[mask1, 'target'] = 1
+    mask2 = (data['target'] < 0.98)
+    data.loc[mask2, 'target'] = -1
+    print((~(mask1 | mask2)).sum())
+    data.loc[~(mask1 | mask2), 'target'] = 0
+
     # data = data.reset_index(drop=False)
     # data['date'] = pd.to_datetime(data['date'])
 
