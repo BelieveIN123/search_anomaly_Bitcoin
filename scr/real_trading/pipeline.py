@@ -68,13 +68,14 @@ class CustomStrategy(bt.Strategy):
                 max_diff_position_top = self.data0.high[0] / self.buyprice - 1
                 max_diff_position_bot = self.data0.low[0] / self.buyprice - 1
 
-                # Условия выхода # 1
-                if (len(self) >= (self.bar_executed + self.params.hold_days) or
-                    max_diff_position_top >= self.params.take_profit or
-                    max_diff_position_bot <= self.params.stop_loss  # Разделить. Это при разных ценах.
-                ):
+                # Условия выхода
+                if len(self) >= (self.bar_executed + self.params.hold_days):
                     self.order = self.sell(size=self.position.size, price=price_close)
                     return
+                elif max_diff_position_top >= self.params.take_profit:
+                    pass
+                elif max_diff_position_bot <= self.params.stop_loss:  # TODO
+                    pass
 
             # elif self.position.size < 0:  # Закрытие короткой позиции # TODO
             #     # Условия выхода # 1
