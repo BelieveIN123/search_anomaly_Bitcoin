@@ -115,8 +115,8 @@ class CustomStrategy(bt.Strategy):
         else:
             data = pd.DataFrame(data)
 
-        # Нормализация данных
-        data = (data - data.mean()) / data.std()
+        # # Нормализация данных
+        # data = (data - data.mean()) / data.std()
 
         # Добавление новых параметров (пример: разница между high и low)
         data['range'] = data['high'] - data['low']
