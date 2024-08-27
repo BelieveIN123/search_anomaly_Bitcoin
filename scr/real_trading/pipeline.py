@@ -57,7 +57,7 @@ class CustomStrategy(bt.Strategy):
 
         # Получаем данные для прогноза (один временной период)
         iter_predict_data = pd.DataFrame([self.get_training_features()])
-        data = self.data_preparation(iter_predict_data)  # TODO поправить.
+        data = self.data_preparation(iter_predict_data)  # TODO поправить. Выходные данные Nan!!!
         prediction = model.predict(data)
 
         # if self.order:  # TODO - Не правильное выставление ордеров.
