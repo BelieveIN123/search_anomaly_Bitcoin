@@ -67,7 +67,12 @@ class CustomStrategy(bt.Strategy):
                 price_buy = self.buyprice   # Цена входа в позицию.
 
                 # Условия выхода
+                ## Выход если hold_days дней в позиции.
                 if len(self) >= (self.bar_executed + self.params.hold_days):
+                    self.order = self.sell(size=self.position.size, price=price_close)
+                    return
+                ## Выход если прогоз в противо фазую.
+                elif prediction == -1:
                     self.order = self.sell(size=self.position.size, price=price_close)
                     return
                 # elif max_diff_position_top >= self.params.take_profit:
