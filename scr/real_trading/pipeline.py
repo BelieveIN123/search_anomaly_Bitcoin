@@ -5,6 +5,11 @@ import pandas as pd
 import datetime
 from collections import deque
 import yfinance as yf
+import matplotlib
+import matplotlib.pyplot as plt
+
+matplotlib.use('Agg')  # Установка бэкенда перед импортом pyplot
+
 
 # Предполагаем, что у вас есть начально обученная модель CatBoost
 model = CatBoostClassifier()
@@ -214,3 +219,11 @@ if __name__ == '__main__':
 
     # Печать конечного результата
     print('Ending Portfolio Value: %.2f' % cerebro.broker.getvalue())
+
+    with matplotlib.pyplot.ioff():
+        figs = cerebro.plot(iplot=False)
+        for fig in figs:
+            for f in fig:
+                plt.figure(f.number)  # Активируем фигуру для сохранения
+                plt.savefig(f'my_strategy_plot{f.number}.png')
+                plt.close(f)
