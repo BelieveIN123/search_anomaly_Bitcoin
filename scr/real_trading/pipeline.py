@@ -80,32 +80,6 @@ class CustomStrategy(bt.Strategy):
                 elif prediction == -1:
                     self.order = self.sell(size=self.position.size, price=price_close)
                     return
-                # elif max_diff_position_top >= self.params.take_profit:
-                #     pass
-                # elif max_diff_position_bot <= self.params.stop_loss:  # TODO
-                #     pass
-
-            # elif self.position.size < 0:  # Закрытие короткой позиции # TODO
-            #     # Условия выхода # 1
-            #     if len(self) >= (self.bar_executed + self.params.hold_days):
-            #         self.order = self.buy(size=abs(self.position.size), price=self.dataclose[0])
-
-            # # Условия выхода # 1
-            # if len(self) >= (self.bar_executed + self.params.hold_days):
-            #     self.order = self.sell()
-            #     return
-
-            # current_position = self.dataclose[0] / self.buyprice - 1
-            # if current_position >= self.params.take_profit:
-            #     self.order = self.sell()
-            #     return
-            # elif current_position <= -self.params.stop_loss:
-            #     self.order = self.sell()
-            #     return
-            #
-            # if prediction == 1:  # Прогноз в другую сторону
-            #     self.order = self.sell()
-            #     return
         else:
             # Условия входа
             if prediction == 1:
