@@ -101,7 +101,7 @@ class CustomStrategy(bt.Strategy):
             'type': 'Sell',
             'size': self.position.size,
             'price': price,
-            'value': price * self.position.size + self.broker.get_cash(),
+            'value': price * self.position.size + self.broker.get_cash(), # self.broker.getvalue() # Аналогично
             'trade_reason': reason,
         }
         self.trade_history.append(exit_info)
