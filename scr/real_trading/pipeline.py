@@ -66,23 +66,29 @@ class CustomStrategy(bt.Strategy):
                     return
         else:
             if prediction == 1:
+                size_to_buy = self.broker.get_cash() // price_close
                 price_take = price_close * (1 + self.params.take_profit)
                 price_stop = price_close * (1 + self.params.stop_loss)
-                self.order = self.buy_bracket(limitprice=price_take, price=price_close, stopprice=price_stop)
+                self.order = self.buy_bracket(
+                    size=size_to_buy,
+                    limitprice=price_take,
+                    price=price_close,
+                    stopprice=price_stop
+                )
                 self.bar_executed = len(self)
-                self.record_entry(price_close)
+                self.record_entry(price_close, size_to_buy)
 
         self.training_data.append(self.get_training_features())
         self.training_labels.append(self.get_training_label())
 
-    def record_entry(self, price):
+    def record_entry(self, price, size):
         """Запись информации о входе в позицию."""
         entry_info = {
             'datetime': self.data.datetime.date(0),
             'type': 'Buy',
-            'size': self.broker.get_cash() / price,
+            'size': size,
             'price': price,
-            'value': self.broker.get_cash(),
+            'value': self.broker.getvalue(),
             'trade_reason': 'Model prediction',
         }
         self.trade_history.append(entry_info)
