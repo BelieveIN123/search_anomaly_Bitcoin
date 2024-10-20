@@ -40,6 +40,8 @@ class BacktestStrategy1():
         self._set_work_path()
         df = DataPreparation().read_final_file()
         print('df', type(df), list(df))
+        # Скопировать из backtrest_strategy1 -> if __name__ == '__main__': -> # TODO
+        strategy = pass
 
 
 if __name__ == '__main__':
