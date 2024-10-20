@@ -37,6 +37,10 @@ class CustomStrategy(bt.Strategy):
         self.trade_history = []  # История сделок
         self.training_data = deque(maxlen=self.params.training_data_window)
         self.training_labels = deque(maxlen=self.params.training_data_window)
+        self.exit_reason = ''
+        self.entry_order = None
+        self.take_profit_order = None
+        self.stop_loss_order = None
 
     def next(self):
         if len(self) < self.params.initial_skip_days:
@@ -57,11 +61,21 @@ class CustomStrategy(bt.Strategy):
             if self.position.size > 0:
                 price_buy = self.buyprice
                 if len(self) >= (self.bar_executed + self.params.hold_days):
-                    self.record_exit(price_close, 'Hold days exit')
+                    self.exit_reason = 'Hold days exit'
+                    # Cancel existing exit orders
+                    self.cancel(self.take_profit_order)
+                    self.cancel(self.stop_loss_order)
+                    # Place market sell order
+                    self.record_exit(price_close, self.exit_reason)
                     self.order = self.sell(size=self.position.size, price=price_close)
                     return
                 elif prediction == -1:
-                    self.record_exit(price_close, 'Prediction exit')
+                    self.exit_reason = 'Prediction exit'
+                    # Cancel existing exit orders
+                    self.cancel(self.take_profit_order)
+                    self.cancel(self.stop_loss_order)
+                    # Place market sell order
+                    self.record_exit(price_close, self.exit_reason)
                     self.order = self.sell(size=self.position.size, price=price_close)
                     return
         else:
@@ -69,7 +83,7 @@ class CustomStrategy(bt.Strategy):
                 size_to_buy = self.broker.get_cash() // price_close
                 price_take = price_close * (1 + self.params.take_profit)
                 price_stop = price_close * (1 + self.params.stop_loss)
-                self.order = self.buy_bracket(
+                self.entry_order, self.take_profit_order, self.stop_loss_order = self.buy_bracket(
                     size=size_to_buy,
                     limitprice=price_take,
                     price=price_close,
