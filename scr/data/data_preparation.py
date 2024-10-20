@@ -206,7 +206,7 @@ class DataPreparation:
 
     def _save_final_file(self):
         """
-
+        Сохранение итогового файла с добавленными признаками.
         :return:
         """
         name = f'{self.pair_names}_{self.count_day}d_interval-{self.interval}_diff'
@@ -218,7 +218,25 @@ class DataPreparation:
 
         # Сохранение данных.
         with open(file_path, 'wb') as file:
-            pickle.dump(name, file)
+            pickle.dump(self.df_quotes, file)
+
+    def read_final_file(self):
+        """
+        Загрузка сохраненного файла.
+
+        :return: Загруженные данные из файла.
+        """
+        name = f'{self.pair_names}_{self.count_day}d_interval-{self.interval}_diff'
+        part_name = 'data/processed'
+        file_path = f'{part_name}/{name}.pkl'
+
+        if Path(file_path).exists():
+            # Чтение данных из файла.
+            with open(file_path, 'rb') as file:
+                data = pickle.load(file)
+            return data
+        else:
+            raise FileNotFoundError(f"Файл {file_path} не найден.")
 
     def prepare_data_main(self):
         self.set_work_path()
