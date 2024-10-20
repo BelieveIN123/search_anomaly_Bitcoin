@@ -7,6 +7,7 @@ from collections import deque
 import yfinance as yf
 import matplotlib
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 matplotlib.use('Agg')  # Установка бэкенда перед импортом pyplot
 
@@ -41,6 +42,7 @@ class CustomStrategy(bt.Strategy):
         self.entry_order = None
         self.take_profit_order = None
         self.stop_loss_order = None
+        self.data_history: list = []
 
     def next(self):
         if len(self) < self.params.initial_skip_days:
@@ -55,6 +57,13 @@ class CustomStrategy(bt.Strategy):
         iter_predict_data = pd.DataFrame([self.get_training_features()])
         data = self.data_preparation(iter_predict_data)
         prediction = model.predict(data)
+
+        # Record the date and prediction
+        prediction_info = {
+            'datetime': self.data.datetime.date(0),
+            'prediction': prediction[0]  # Assuming prediction is an array
+        }
+        self.data_history.append(prediction_info)
 
         price_close = self.data0.close[0]
         if self.position:
@@ -170,8 +179,17 @@ if __name__ == '__main__':
     cerebro.broker.set_cash(10000.0)
     cerebro.broker.setcommission(commission=0.0)
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
-    cerebro.run()
+    # Run the strategy
+    strategies = cerebro.run()
+    strategy = strategies[0]  # Get the instance of the strategy
+
     print('Ending Portfolio Value: %.2f' % cerebro.broker.getvalue())
+
+    # Convert prediction history to DataFrame
+    predictions_df = pd.DataFrame(strategy.data_history)
+    print('Ending Portfolio Value: %.2f' % cerebro.broker.getvalue())
+    path_excel = Path(r'D:\Analyst_profession\PROGECT\BTC Find Anamaly\work git\search_anomaly_Bitcoin\data history.xlsx')
+    predictions_df.to_excel(path_excel)
 
     with matplotlib.pyplot.ioff():
         figs = cerebro.plot(iplot=False)
