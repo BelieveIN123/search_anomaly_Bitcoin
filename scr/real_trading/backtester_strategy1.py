@@ -168,9 +168,38 @@ class CustomStrategy(bt.Strategy):
         model.fit(new_data, new_labels, verbose=False)
 
 
-if __name__ == "__main__":
+def run_backtest_and_save_plot(strategy_class, data_feed):
     cerebro = bt.Cerebro()
-    cerebro.addstrategy(CustomStrategy)
+    cerebro.addstrategy(strategy_class)
+    cerebro.adddata(data_feed)
+    cerebro.broker.set_cash(10000.0)
+    cerebro.broker.setcommission(commission=0.0)
+    print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
+
+    # Запуск стратегии
+    strategies = cerebro.run()
+    strategy = strategies[0]  # Получение экземпляра стратегии
+
+    print("Ending Portfolio Value: %.2f" % cerebro.broker.getvalue())
+
+    # Сохранение истории предсказаний в Excel
+    predictions_df = pd.DataFrame(strategy.data_history)
+    path_excel = Path(
+        r"D:\Analyst_profession\PROGECT\BTC Find Anamaly\work git\search_anomaly_Bitcoin\data history.xlsx"
+    )
+    predictions_df.to_excel(path_excel)
+
+    # Сохранение графиков
+    with matplotlib.pyplot.ioff():
+        figs = cerebro.plot(iplot=False)
+        for fig in figs:
+            for f in fig:
+                plt.figure(f.number)
+                plt.savefig(f"my_strategy_plot{f.number}.png")
+                plt.close(f)
+
+
+if __name__ == "__main__":
     data = yf.download("AAPL", start="2022-01-01", end="2023-01-01")
     data.columns = [str.lower(col) for col in list(data)]
     data["month_year"] = (
@@ -185,28 +214,6 @@ if __name__ == "__main__":
     data.loc[~(mask1 | mask2), "target"] = 0
 
     data_feed = CustomPandasData(dataname=data)
-    cerebro.adddata(data_feed)
-    cerebro.broker.set_cash(10000.0)
-    cerebro.broker.setcommission(commission=0.0)
-    print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
-    # Run the strategy
-    strategies = cerebro.run()
-    strategy = strategies[0]  # Get the instance of the strategy
 
-    print("Ending Portfolio Value: %.2f" % cerebro.broker.getvalue())
-
-    # Convert prediction history to DataFrame
-    predictions_df = pd.DataFrame(strategy.data_history)
-    print("Ending Portfolio Value: %.2f" % cerebro.broker.getvalue())
-    path_excel = Path(
-        r"D:\Analyst_profession\PROGECT\BTC Find Anamaly\work git\search_anomaly_Bitcoin\data history.xlsx"
-    )
-    predictions_df.to_excel(path_excel)
-
-    with matplotlib.pyplot.ioff():
-        figs = cerebro.plot(iplot=False)
-        for fig in figs:
-            for f in fig:
-                plt.figure(f.number)
-                plt.savefig(f"my_strategy_plot{f.number}.png")
-                plt.close(f)
+    # Запуск функции для выполнения бэктеста и сохранения графиков
+    run_backtest_and_save_plot(CustomStrategy, data_feed)
