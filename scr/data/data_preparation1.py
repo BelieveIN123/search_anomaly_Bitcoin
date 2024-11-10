@@ -279,6 +279,23 @@ class DataPreparation:
             columns={"index": "id_date"}
         )
 
+    def _add_targt_class(self):
+        """
+        Создаю класс для прогнозирования.
+        """
+
+        def split_by_class(val):
+            if val == 0:
+                return 0
+            elif val > 1:
+                return 1
+            elif val < 1:
+                return -1
+
+        self.df_quotes["target_class"] = self.df_quotes["target_predict"].apply(
+            split_by_class
+        )
+
     def prepare_data_main(self):
         self.set_work_path()
         if self.load_new_data:
@@ -289,7 +306,9 @@ class DataPreparation:
         self._convert_to_diff_format()
         self._find_target_bar(diff_find=0.05)
         self.add_date_id()
+        self._add_targt_class()
         self._save_final_file()
+        self.df_quotes.to_excel("final_data.xlsx", index=False)
         return self.df_quotes
 
 
