@@ -15,9 +15,34 @@ matplotlib.use("Agg")  # Установка бэкенда перед импор
 model = CatBoostClassifier()
 
 
-class CustomPandasData(bt.feeds.PandasData):
-    lines = ("month_year", "target")
-    params = (("month_year", -1), ("target", -1))
+# class CustomPandasData(bt.feeds.PandasData):
+#     lines = ("month_year", "target")
+#     params = (("month_year", -1), ("target", -1))
+
+columns_main_backtr = ["Date", "Open", "High", "Low", "Close", "Volume"]
+
+columns_for_backtrader = [
+    "Date",
+    "Open",
+    "Close",
+    "Open_diff",
+    "High_diff",
+    "Low_diff",
+    "Close_diff",
+    "Volume_diff",
+    "Quote asset volume_diff",
+    "Number of trades_diff",
+    "diff_low",
+    "diff_high",
+    "id_date",
+    "target_predict",
+    "target_class",
+]
+
+
+class CustomPandasData1(bt.feeds.PandasData):
+    lines = tuple(col for col in columns_for_backtrader)
+    params = tuple((col, -1) for col in columns_for_backtrader)
 
 
 class CustomStrategy(bt.Strategy):
@@ -47,6 +72,16 @@ class CustomStrategy(bt.Strategy):
         self.take_profit_order = None
         self.stop_loss_order = None
         self.data_history: list = []
+        self.columns_for_fit_model = [
+            "id_date",
+            "Open_diff",
+            "High_diff",
+            "Low_diff",
+            "Close_diff",
+            "Volume_diff",
+            "Quote asset volume_diff",
+            "Number of trades_diff",
+        ]
 
     def next(self):
         if len(self) < self.params.initial_skip_days:
@@ -142,23 +177,18 @@ class CustomStrategy(bt.Strategy):
             raise ValueError("data должна иметь значения.")
         else:
             data = pd.DataFrame(data)
-        data["range"] = data["high"] - data["low"]
-        data["change"] = data["close"] - data["open"]
+        # data["range"] = data["high"] - data["low"]
+        # data["change"] = data["close"] - data["open"]
         return data
 
     def get_training_features(self):
         features = {
-            "open": self.data0.open[0],
-            "high": self.data0.high[0],
-            "low": self.data0.low[0],
-            "close": self.data0.close[0],
-            "volume": self.data0.volume[0],
-            "month_year": self.data0.month_year[0],
+            col: getattr(self.data0, col)[0] for col in self.columns_for_fit_model
         }
         return features
 
     def get_training_label(self):
-        target = {"target": self.data0.target[0]}
+        target = {"target": self.data0.target_class[0]}
         return target
 
     def retrain_model(self):
@@ -168,7 +198,9 @@ class CustomStrategy(bt.Strategy):
         model.fit(new_data, new_labels, verbose=False)
 
 
-def run_backtest_and_save_plot(strategy_class, data_feed):
+def run_backtest_and_save_plot(strategy_class, data):
+    data_feed = CustomPandasData1(dataname=data)
+
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategy_class)
     cerebro.adddata(data_feed)
@@ -197,23 +229,3 @@ def run_backtest_and_save_plot(strategy_class, data_feed):
                 plt.figure(f.number)
                 plt.savefig(f"my_strategy_plot{f.number}.png")
                 plt.close(f)
-
-
-if __name__ == "__main__":
-    data = yf.download("AAPL", start="2022-01-01", end="2023-01-01")
-    data.columns = [str.lower(col) for col in list(data)]
-    data["month_year"] = (
-        data.index.day + data.index.month * 100 + data.index.year * 100 * 100
-    )
-    data["target"] = data["open"] / data["open"].shift(1)
-    data["target"] = data["target"].fillna(0)
-    mask1 = data["target"] > 1.02
-    data.loc[mask1, "target"] = 1
-    mask2 = data["target"] < 0.98
-    data.loc[mask2, "target"] = -1
-    data.loc[~(mask1 | mask2), "target"] = 0
-
-    data_feed = CustomPandasData(dataname=data)
-
-    # Запуск функции для выполнения бэктеста и сохранения графиков
-    run_backtest_and_save_plot(CustomStrategy, data_feed)
