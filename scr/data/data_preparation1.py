@@ -272,12 +272,19 @@ class DataPreparation:
             raise FileNotFoundError(f"Файл {file_path} не найден.")
 
     def add_date_id(self):
+        """
+        Добавляется id даты и колонка даты.
+        :return:
+        """
+
         self.df_quotes["Open time"] = pd.to_datetime(self.df_quotes["Open time"])
         self.df_quotes = self.df_quotes.sort_values(by="Open time", ascending=True)
         self.df_quotes = self.df_quotes.reset_index(drop=True)
         self.df_quotes = self.df_quotes.reset_index(drop=False).rename(
-            columns={"index": "id_date"}
+            columns={"index": "id_day"}
         )
+
+        self.df_quotes["date"] = pd.to_datetime(self.df_quotes["Open time"])
 
     def _add_targt_class(self):
         """
