@@ -314,6 +314,8 @@ class DataPreparation:
         self._find_target_bar(diff_find=0.05)
         self.add_date_id()
         self._add_targt_class()
+
+        self.df_quotes.columns = [str.lower(col) for col in list(self.df_quotes)]
         self._save_final_file()
         self.df_quotes.to_excel("final_data.xlsx", index=False)
         return self.df_quotes
