@@ -19,22 +19,22 @@ model = CatBoostClassifier()
 #     lines = ("month_year", "target")
 #     params = (("month_year", -1), ("target", -1))
 
-columns_main_backtr = ["Date", "Open", "High", "Low", "Close", "Volume"]
+columns_main_backtr = ["date", "open", "high", "low", "close", "volume"]
 
 columns_for_backtrader = [
-    "Date",
-    "Open",
-    "Close",
-    "Open_diff",
-    "High_diff",
-    "Low_diff",
-    "Close_diff",
-    "Volume_diff",
-    "Quote asset volume_diff",
-    "Number of trades_diff",
-    "diff_low",
-    "diff_high",
-    "id_date",
+    "date",
+    "open",
+    "close",
+    "open_diff",
+    "high_diff",
+    "low_diff",
+    "close_diff",
+    "volume_diff",
+    "quote_asset_volume_diff",
+    "number_of_trades_diff",
+    # "diff_low",
+    # "diff_high",
+    "id_day",
     "target_predict",
     "target_class",
 ]
@@ -42,7 +42,31 @@ columns_for_backtrader = [
 
 class CustomPandasData1(bt.feeds.PandasData):
     lines = tuple(col for col in columns_for_backtrader)
-    params = tuple((col, -1) for col in columns_for_backtrader)
+    # Устанавливаем индексы для обязательных параметров
+
+    params = (
+        ("date", None),
+        ("open", "open"),
+        ("high", "high"),
+        ("low", "low"),
+        ("close", "close"),
+        ("volume", "volume"),
+        # ("openinterest", -1),  # Если нет open interest
+        # Задаем параметры для дополнительных линий
+        ("volume_diff", "volume_diff"),
+        ("open_diff", "open_diff"),
+        ("high_diff", "high_diff"),
+        ("low_diff", "low_diff"),
+        ("close_diff", "close_diff"),
+        ("volume_diff", "volume_diff"),
+        ("quote_asset_volume_diff", "quote_asset_volume_diff"),
+        ("number_of_trades_diff", "number_of_trades_diff"),
+        # ("diff_low", "diff_low"),
+        # ("diff_high", "diff_high"),
+        ("id_day", "id_day"),
+        ("target_predict", "target_predict"),
+        ("target_class", "target_class"),
+    )
 
 
 class CustomStrategy(bt.Strategy):
@@ -73,14 +97,14 @@ class CustomStrategy(bt.Strategy):
         self.stop_loss_order = None
         self.data_history: list = []
         self.columns_for_fit_model = [
-            "id_date",
-            "Open_diff",
-            "High_diff",
-            "Low_diff",
-            "Close_diff",
-            "Volume_diff",
-            "Quote asset volume_diff",
-            "Number of trades_diff",
+            "id_day",
+            "open_diff",
+            "high_diff",
+            "low_diff",
+            "close_diff",
+            "volume_diff",
+            "quote_asset_volume_diff",
+            "number_of_trades_diff",
         ]
 
     def next(self):
@@ -199,8 +223,9 @@ class CustomStrategy(bt.Strategy):
 
 
 def run_backtest_and_save_plot(strategy_class, data):
+    data = data.set_index("date")
     data_feed = CustomPandasData1(dataname=data)
-
+    print("Создана модель данных")
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategy_class)
     cerebro.adddata(data_feed)

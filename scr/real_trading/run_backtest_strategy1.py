@@ -2,10 +2,14 @@ import os
 from pathlib import Path
 import logging as logger
 from scr.real_trading.backtester_strategy1 import CustomStrategy
-from scr.data.data_preparation import DataPreparation
+from scr.data.data_preparation1 import DataPreparation
+from scr.real_trading.backtester_strategy1 import (
+    run_backtest_and_save_plot,
+    CustomStrategy,
+)
 
 
-class BacktestStrategy1():
+class BacktestStrategy1:
     def __init__(self):
         pass
 
@@ -19,7 +23,9 @@ class BacktestStrategy1():
 
         # Если "su-data-platform" найден, переходим к его родительскому каталогу
         if index != -1:
-            project_directory = current_directory[: index + len("search_anomaly_Bitcoin")]
+            project_directory = current_directory[
+                : index + len("search_anomaly_Bitcoin")
+            ]
 
             # Переходим в родительский каталог "su-data-platform"
             os.chdir(project_directory)
@@ -35,16 +41,34 @@ class BacktestStrategy1():
         print(f"Рабочая директория: {current_directory}")
         return Path(current_directory)
 
-
     def run_backtest(self):
         self._set_work_path()
         df = DataPreparation().read_final_file()
-        print('df', type(df), list(df))
-        # Скопировать из backtrest_strategy1 -> if __name__ == '__main__': -> # TODO
-        strategy = pass
+        print("df", type(df), list(df))
+        df[
+            [
+                "date",
+                "id_day",
+                "open",
+                "close",
+                "open_diff",
+                "high_diff",
+                "low_diff",
+                "close_diff",
+                "volume_diff",
+                "quote_asset_volume_diff",
+                "number_of_trades_diff",
+                # "diff_low",
+                # "diff_high",
+                "id_day",
+                "target_predict",
+                "target_class",
+            ]
+        ]
+
+        strategy_result = run_backtest_and_save_plot(CustomStrategy, df)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_test = BacktestStrategy1()
     run_test.run_backtest()
-
