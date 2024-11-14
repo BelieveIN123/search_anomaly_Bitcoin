@@ -294,9 +294,9 @@ class DataPreparation:
         def split_by_class(val):
             if val == 0:
                 return 0
-            elif val > 1:
+            elif val > 0:
                 return 1
-            elif val < 1:
+            elif val < 0:
                 return -1
 
         self.df_quotes["target_class"] = self.df_quotes["target_predict"].apply(
