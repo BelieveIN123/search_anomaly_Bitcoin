@@ -106,6 +106,7 @@ class CustomStrategy(bt.Strategy):
             "quote_asset_volume_diff",
             "number_of_trades_diff",
         ]
+        self.column_fit_target = "target_class"
 
     def next(self):
         if len(self) < self.params.initial_skip_days:
