@@ -74,7 +74,7 @@ class CustomStrategy(bt.Strategy):
         ("stop_loss", -0.05),
         ("take_profit", 0.05),
         ("hold_days", 3),
-        ("retrain_period", 300),  # Период дообучения в днях
+        ("retrain_period", 100),  # Период дообучения в днях
         (
             "initial_skip_days",
             100,
@@ -231,7 +231,7 @@ def run_backtest_and_save_plot(strategy_class, data):
     cerebro.addstrategy(strategy_class)
     cerebro.adddata(data_feed)
     cerebro.broker.set_cash(10000.0)
-    cerebro.broker.setcommission(commission=0.0)
+    cerebro.broker.setcommission(commission=0.002)
     print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
 
     # Запуск стратегии
