@@ -131,28 +131,24 @@ class CustomStrategy(bt.Strategy):
 
         price_close = self.data0.close[0]
         if self.position:
-            if self.position.size > 0:
+            if self.position.size > 0:  # Длинная позиция
                 price_buy = self.buyprice
                 if len(self) >= (self.bar_executed + self.params.hold_days):
-                    self.exit_reason = "Hold days exit"
-                    # Cancel existing exit orders
-                    self.cancel(self.take_profit_order)
-                    self.cancel(self.stop_loss_order)
-                    # Place market sell order
-                    self.record_exit(price_close, self.exit_reason)
-                    self.order = self.sell(size=self.position.size, price=price_close)
-                    return
-                elif prediction == -1:
-                    self.exit_reason = "Prediction exit"
-                    # Cancel existing exit orders
-                    self.cancel(self.take_profit_order)
-                    self.cancel(self.stop_loss_order)
-                    # Place market sell order
-                    self.record_exit(price_close, self.exit_reason)
-                    self.order = self.sell(size=self.position.size, price=price_close)
-                    return
+                    self.exit_reason = "Hold days exit (Long)"
+                    self.close_position(price_close)
+                elif prediction == -1:  # Сигнал на продажу
+                    self.exit_reason = "Prediction exit (Short signal)"
+                    self.close_position(price_close)
+            elif self.position.size < 0:  # Короткая позиция
+                price_sell = self.sellprice
+                if len(self) >= (self.bar_executed + self.params.hold_days):
+                    self.exit_reason = "Hold days exit (Short)"
+                    self.close_position(price_close)
+                elif prediction == 1:  # Сигнал на покупку
+                    self.exit_reason = "Prediction exit (Long signal)"
+                    self.close_position(price_close)
         else:
-            if prediction == 1:
+            if prediction == 1:  # Открытие длинной позиции
                 size_to_buy = self.broker.get_cash() // price_close
                 price_take = price_close * (1 + self.params.take_profit)
                 price_stop = price_close * (1 + self.params.stop_loss)
@@ -165,16 +161,40 @@ class CustomStrategy(bt.Strategy):
                     )
                 )
                 self.bar_executed = len(self)
-                self.record_entry(price_close, size_to_buy)
+                self.record_entry(price_close, size_to_buy, "Buy")
+            elif prediction == -1:  # Открытие короткой позиции
+                size_to_sell = self.broker.get_cash() // price_close
+                price_take = price_close * (1 - self.params.take_profit)
+                price_stop = price_close * (1 - self.params.stop_loss)
+                self.entry_order, self.take_profit_order, self.stop_loss_order = (
+                    self.sell_bracket(
+                        size=size_to_sell,
+                        limitprice=price_take,
+                        price=price_close,
+                        stopprice=price_stop,
+                    )
+                )
+                self.bar_executed = len(self)
+                self.record_entry(price_close, size_to_sell, "Sell")
 
         self.training_data.append(self.get_training_features())
         self.training_labels.append(self.get_training_label())
 
-    def record_entry(self, price, size):
+    def close_position(self, price_close):
+        """Закрытие текущей позиции с записью информации."""
+        self.cancel(self.take_profit_order)
+        self.cancel(self.stop_loss_order)
+        self.record_exit(price_close, self.exit_reason)
+        if self.position.size > 0:
+            self.order = self.sell(size=self.position.size, price=price_close)
+        elif self.position.size < 0:
+            self.order = self.buy(size=-self.position.size, price=price_close)
+
+    def record_entry(self, price, size, position_type):
         """Запись информации о входе в позицию."""
         entry_info = {
             "datetime": self.data.datetime.date(0),
-            "type": "Buy",
+            "type": position_type,
             "size": size,
             "price": price,
             "value": self.broker.getvalue(),
