@@ -140,7 +140,7 @@ class CustomStrategy(bt.Strategy):
                     self.exit_reason = "Prediction exit (Short signal)"
                     self.close_position(price_close)
             elif self.position.size < 0:  # Короткая позиция
-                price_sell = self.sellprice
+                # price_sell = self.sellprice
                 if len(self) >= (self.bar_executed + self.params.hold_days):
                     self.exit_reason = "Hold days exit (Short)"
                     self.close_position(price_close)
