@@ -161,7 +161,7 @@ class DataPreparation:
         ].pct_change()
         for col in list(self.df_quotes_diff):
             new_col = col + "_diff"
-            self.df_quotes[new_col] = self.df_quotes[col]
+            self.df_quotes[new_col] = self.df_quotes_diff[col]  # TODO
 
         self.df_quotes_diff.to_excel("self.df_quotes_diff.xlsx", index=False)
         self.df_quotes.to_excel("self.df_quotes.xlsx", index=False)
@@ -318,6 +318,7 @@ class DataPreparation:
         self.df_quotes.columns = [
             str.lower(col).replace(" ", "_") for col in list(self.df_quotes)
         ]
+        self.df_quotes = self.df_quotes.dropna()
         self._save_final_file()
         self.df_quotes.to_excel("final_data.xlsx", index=False)
         return self.df_quotes

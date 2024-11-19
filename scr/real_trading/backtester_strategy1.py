@@ -250,7 +250,7 @@ def run_backtest_and_save_plot(strategy_class, data):
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategy_class)
     cerebro.adddata(data_feed)
-    cerebro.broker.set_cash(10000.0)
+    cerebro.broker.set_cash(1000000.0)
     cerebro.broker.setcommission(commission=0.002)
     print("Starting Portfolio Value: %.2f" % cerebro.broker.getvalue())
 
