@@ -286,6 +286,36 @@ class DataPreparation:
 
         self.df_quotes["date"] = pd.to_datetime(self.df_quotes["Open time"])
 
+    def _add_after_n_data(self, n_day, add_columns):
+        """
+        Добавление данных предыдущих дней.
+        :param n_window:
+        :param add_columns:
+        :return:
+        """
+
+        # Конвертация open_time в datetime
+        self.df_quotes["open_time"] = pd.to_datetime(self.df_quotes["open_time"])
+
+        # Указываем N и колонки для сдвига
+        columns_to_shift = [
+            "open_diff",
+            "high_diff",
+            "low_diff",
+            "close_diff",
+            "volume_diff",
+            "quote_asset_volume_diff",
+            "number_of_trades_diff",
+        ]
+
+        self.columns_shift = []
+        # Добавляем N предыдущих значений для каждой колонки
+        for col in columns_to_shift:
+            for i in range(1, n_day + 1):
+                new_col = f"{col}_lag_{i}"
+                self.df_quotes[new_col] = self.df_quotes[col].shift(i)
+                self.columns_shift.append(new_col)
+
     def _add_targt_class(self):
         """
         Создаю класс для прогнозирования.
