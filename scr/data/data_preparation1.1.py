@@ -245,6 +245,7 @@ class DataPreparation:
         name = f"{self.pair_names}_{self.count_day}d_interval-{self.interval}_diff"
         part_name = "data/processed"
         file_path = f"{part_name}/{name}.pkl"
+        file_path_add_columns = f"{part_name}/{name}_add_columns.pkl"
 
         if not Path(part_name).exists():
             os.mkdir(part_name)
@@ -252,6 +253,10 @@ class DataPreparation:
         # Сохранение данных.
         with open(file_path, "wb") as file:
             pickle.dump(self.df_quotes, file)
+
+        # Сохранение колонок.
+        with open(file_path_add_columns, "wb") as file:
+            pickle.dump(self.columns_shift, file)
 
     def read_final_file(self):
         """
@@ -262,14 +267,22 @@ class DataPreparation:
         name = f"{self.pair_names}_{self.count_day}d_interval-{self.interval}_diff"
         part_name = "data/processed"
         file_path = f"{part_name}/{name}.pkl"
+        file_path_add_columns = f"{part_name}/{name}_add_columns.pkl"
 
         if Path(file_path).exists():
             # Чтение данных из файла.
             with open(file_path, "rb") as file:
                 data = pickle.load(file)
-            return data
         else:
             raise FileNotFoundError(f"Файл {file_path} не найден.")
+
+        if Path(file_path_add_columns).exists():
+            # Чтение данных из файла.
+            with open(file_path_add_columns, "rb") as file:
+                columns = pickle.load(file)
+        else:
+            raise FileNotFoundError(f"Файл {file_path} не найден.")
+        return data, columns
 
     def add_date_id(self):
         """
@@ -297,20 +310,9 @@ class DataPreparation:
         # Конвертация open_time в datetime
         self.df_quotes["open_time"] = pd.to_datetime(self.df_quotes["open_time"])
 
-        # Указываем N и колонки для сдвига
-        columns_to_shift = [
-            "open_diff",
-            "high_diff",
-            "low_diff",
-            "close_diff",
-            "volume_diff",
-            "quote_asset_volume_diff",
-            "number_of_trades_diff",
-        ]
-
         self.columns_shift = []
         # Добавляем N предыдущих значений для каждой колонки
-        for col in columns_to_shift:
+        for col in add_columns:
             for i in range(1, n_day + 1):
                 new_col = f"{col}_lag_{i}"
                 self.df_quotes[new_col] = self.df_quotes[col].shift(i)
@@ -348,6 +350,19 @@ class DataPreparation:
         self.df_quotes.columns = [
             str.lower(col).replace(" ", "_") for col in list(self.df_quotes)
         ]
+
+        add_columns = [
+            "open_diff",
+            "high_diff",
+            "low_diff",
+            "close_diff",
+            "volume_diff",
+            "quote_asset_volume_diff",
+            "number_of_trades_diff",
+        ]
+        n_day = 30
+
+        self._add_after_n_data(n_day, add_columns)
         self.df_quotes = self.df_quotes.dropna()
         self._save_final_file()
         self.df_quotes.to_excel("final_data.xlsx", index=False)
