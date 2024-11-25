@@ -259,7 +259,7 @@ def run_backtest_and_save_plot(
     data_feed = CustomPandasData1(dataname=data, custom_lines=all_column_in_strategy)
     print("Создана модель данных")
     cerebro = bt.Cerebro()
-    cerebro.addstrategy(strategy_class)
+    cerebro.addstrategy(strategy_class, columns_for_fit_model=column_for_fit)
     cerebro.adddata(data_feed)
     cerebro.broker.set_cash(1000000.0)
     cerebro.broker.setcommission(commission=0.002)
