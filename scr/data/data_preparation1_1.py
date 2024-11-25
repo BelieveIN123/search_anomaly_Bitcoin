@@ -335,6 +335,9 @@ class DataPreparation:
             split_by_class
         )
 
+    def drop_no_use_column(self):
+        self.df_quotes = self.df_quotes.drop(columns=["open_time", "close_time"])
+
     def prepare_data_main(self):
         self.set_work_path()
         if self.load_new_data:
@@ -364,8 +367,10 @@ class DataPreparation:
 
         self._add_after_n_data(n_day, add_columns)
         self.df_quotes = self.df_quotes.dropna()
+        self.drop_no_use_column()
         self._save_final_file()
         self.df_quotes.to_excel("final_data.xlsx", index=False)
+
         return self.df_quotes
 
 

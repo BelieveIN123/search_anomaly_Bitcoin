@@ -69,7 +69,10 @@ class BacktestStrategy1:
 
         all_column_in_strategy = list(df)
         strategy_result = run_backtest_and_save_plot(
-            CustomStrategy, df, all_column_in_strategy
+            CustomStrategy,
+            df,
+            all_column_in_strategy,
+            column_for_fit=add_columns,  # TODO - по править предподготовку данных. Сейчас нет деленяи на даныне для обученяи и данные для модели.
         )
 
 

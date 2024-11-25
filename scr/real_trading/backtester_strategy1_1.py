@@ -40,40 +40,19 @@ columns_for_backtrader = [
 ]
 
 
-class CustomPandasData1(bt.feeds.PandasData):
-    # lines = tuple(col for col in columns_for_backtrader)
+def create_custom_pandas_data(custom_lines):
+    # Build a dictionary of parameters, mapping each line to the column name
+    set_param = ["date"]
+    params_dict = {k: k for k in custom_lines if k not in set_param}
+
+    class CustomPandasData1(bt.feeds.PandasData):
+        lines = tuple(custom_lines)
+        params = (("date", None),) + tuple(params_dict.items())
+        print("params", params)
+
+    return CustomPandasData1
+
     # Устанавливаем индексы для обязательных параметров
-
-    params = (
-        ("date", None),
-        ("open", "open"),
-        ("high", "high"),
-        ("low", "low"),
-        ("close", "close"),
-        ("volume", "volume"),
-        # ("openinterest", -1),  # Если нет open interest
-        # Задаем параметры для дополнительных линий
-        ("volume_diff", "volume_diff"),
-        ("open_diff", "open_diff"),
-        ("high_diff", "high_diff"),
-        ("low_diff", "low_diff"),
-        ("close_diff", "close_diff"),
-        ("volume_diff", "volume_diff"),
-        ("quote_asset_volume_diff", "quote_asset_volume_diff"),
-        ("number_of_trades_diff", "number_of_trades_diff"),
-        # ("diff_low", "diff_low"),
-        # ("diff_high", "diff_high"),
-        ("id_day", "id_day"),
-        ("target_predict", "target_predict"),
-        ("target_class", "target_class"),
-    )
-
-    def __init__(self, *args, **kwargs):
-        custom_lines = kwargs.pop("custom_lines", None)
-        if custom_lines:
-            # Устанавливаем линии динамически
-            self.lines = tuple(custom_lines)
-        super().__init__(*args, **kwargs)
 
 
 class CustomStrategy(bt.Strategy):
@@ -256,7 +235,8 @@ def run_backtest_and_save_plot(
     # all_column_in_strategy = columns_for_backtrader + columns_for_fit
 
     data = data.set_index("date")
-    data_feed = CustomPandasData1(dataname=data, custom_lines=all_column_in_strategy)
+    custompandasdata = create_custom_pandas_data(custom_lines=all_column_in_strategy)
+    data_feed = custompandasdata(dataname=data)
     print("Создана модель данных")
     cerebro = bt.Cerebro()
     cerebro.addstrategy(strategy_class, columns_for_fit_model=column_for_fit)
