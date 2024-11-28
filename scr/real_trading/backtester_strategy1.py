@@ -222,8 +222,6 @@ class CustomStrategy(bt.Strategy):
             raise ValueError("data должна иметь значения.")
         else:
             data = pd.DataFrame(data)
-        # data["range"] = data["high"] - data["low"]
-        # data["change"] = data["close"] - data["open"]
         return data
 
     def get_training_features(self):
