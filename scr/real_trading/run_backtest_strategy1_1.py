@@ -45,7 +45,7 @@ class BacktestStrategy1:
         self._set_work_path()
         df, add_columns = DataPreparation().read_final_file()
         print("df", type(df), list(df))
-        df[
+        df = df[
             [
                 "date",
                 "id_day",
@@ -65,7 +65,9 @@ class BacktestStrategy1:
                 "target_class",
             ]
             + add_columns
-        ]
+        ]  # TODO - проверить переменные.
+
+        df.to_excel("df to strategy.xlsx")
 
         all_column_in_strategy = list(df)
         strategy_result = run_backtest_and_save_plot(
