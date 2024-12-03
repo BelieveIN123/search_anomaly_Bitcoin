@@ -66,6 +66,7 @@ class CustomStrategy(bt.Strategy):
             100,
         ),  # Количество дней для пропуска перед началом дообучения
         ("training_data_window", 100),  # Размер окна для обучения
+        ("columns_for_fit_model", None),
     )
 
     def __init__(self):
@@ -82,16 +83,17 @@ class CustomStrategy(bt.Strategy):
         self.take_profit_order = None
         self.stop_loss_order = None
         self.data_history: list = []
-        self.columns_for_fit_model = [
-            "id_day",
-            "open_diff",
-            "high_diff",
-            "low_diff",
-            "close_diff",
-            "volume_diff",
-            "quote_asset_volume_diff",
-            "number_of_trades_diff",
-        ]
+        self.columns_for_fit_model = self.params.columns_for_fit_model
+        #     [
+        #     "id_day",
+        #     "open_diff",
+        #     "high_diff",
+        #     "low_diff",
+        #     "close_diff",
+        #     "volume_diff",
+        #     "quote_asset_volume_diff",
+        #     "number_of_trades_diff",
+        # ]
         self.column_fit_target = "target_class"
 
     def next(self):
