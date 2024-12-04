@@ -260,6 +260,33 @@ def run_backtest_and_save_plot(
     )
     predictions_df.to_excel(path_excel)
 
+    # Извлечение данных, используемых для графиков
+    graph_data = []
+    for feed in cerebro.datas:
+        feed_data = {
+            "datetime": [],
+            "open": [],
+            "high": [],
+            "low": [],
+            "close": [],
+            "volume": [],
+        }
+        for i in range(len(feed)):
+            if feed.datetime[i] != float("nan"):  # Проверка на валидность данных
+                feed_data["datetime"].append(bt.num2date(feed.datetime[i]))
+                feed_data["open"].append(feed.open[i])
+                feed_data["high"].append(feed.high[i])
+                feed_data["low"].append(feed.low[i])
+                feed_data["close"].append(feed.close[i])
+                feed_data["volume"].append(feed.volume[i])
+        graph_data.append(pd.DataFrame(feed_data))
+
+    # Сохранение данных для графиков
+    for i, df in enumerate(graph_data):
+        df.to_excel(f"data_for_graph_{i}.xlsx", index=False)
+        print(f"Сохранены данные для графика {i}: data_for_graph_{i}.xlsx")
+
+
     # Сохранение графиков
     with matplotlib.pyplot.ioff():
         figs = cerebro.plot(iplot=False)
